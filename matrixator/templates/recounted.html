@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+
+
+{% block title %}Přepočtené úvazky{% endblock %}
+
+{% block content %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function () {
+        hidden_list = []
+
+        Chart.defaults.doughnut.legend.onClick = function (e, legendItem) {
+            var index = legendItem.index;
+            var ci = this.chart;
+            var i, ilen, meta;
+
+            for (i = 0, ilen = (ci.data.datasets || []).length; i < ilen; ++i) {
+                meta = ci.getDatasetMeta(i);
+                if (meta.data[index]) {
+                    meta.data[index].hidden = !meta.data[index].hidden;
+                }
+            }
+            ci.update();
+
+            hidden_list = [];
+            for (var i = 0, ilen = (ci.data.datasets || []).length; i < ilen; i++) {
+                for (var j = 0; j < ci.getDatasetMeta(i).data.length; j++) {
+                    if (ci.getDatasetMeta(i).data[j].hidden) {
+                        hidden_list.push((j + 1).toString())
+                    }
+                }
+            }
+            $.fn.dataTable.ext.search.push(
+                function (settings, data, dataIndex) {
+                    return !hidden_list.includes($(emp_table.row(dataIndex).node())[0].firstChild.innerText[0]);
+                }
+            );
+            emp_table.draw();
+        }
+
+        var start_date = new Date(new Date().setYear(new Date().getFullYear() - 2));
+        var end_date = new Date(new Date().setYear(new Date().getFullYear() + 2));
+        $("#date_from").datepicker({
+            todayBtn: "linked",
+            format: 'dd-mm-yyyy',
+            startDate: start_date,
+            endDate: end_date,
+        }).on('changeDate', function (e) {
+            emp_table.ajax.url("recounted_data/" + $("#date_from").val() + '/' + $("#date_to").val()).load();
+            $.ajax({
+                url: "recounted_graph_data/" + $("#date_from").val() + '/' + $("#date_to").val()
+            }).done(function (data) {
+                $("#graph_canvas").remove();
+                $("#canvas-container").append("<canvas id='graph_canvas' class='plot'></canvas>");
+                var ctx = document.getElementById('graph_canvas');
+                var projection = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: data,
+                    options: {
+                        legend: {
+                            display: true,
+                        },
+                        title: {
+                            display: true,
+                            text: 'Přepočetný stav úvazků'
+                        },
+                        tooltips: {
+                            mode: 'index',
+                            intersect: true
+                        },
+                        responsive: true,
+                    }
+                });
+            });
+        });
+        $("#date_to").datepicker({
+            todayBtn: "linked",
+            format: 'dd-mm-yyyy',
+            startDate: start_date,
+            endDate: end_date,
+        }).on('changeDate', function (e) {
+            emp_table.ajax.url("recounted_data/" + $("#date_from").val() + '/' + $("#date_to").val()).load();
+            $.ajax({
+                url: "recounted_graph_data/" + $("#date_from").val() + '/' + $("#date_to").val()
+            }).done(function (data) {
+                $("#graph_canvas").remove();
+                $("#canvas-container").append("<canvas id='graph_canvas' class='plot'></canvas>");
+                var ctx = document.getElementById('graph_canvas');
+                var projection = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: data,
+                    options: {
+                        legend: {
+                            display: true,
+                        },
+                        title: {
+                            display: true,
+                            text: 'Přepočetný stav úvazků'
+                        },
+                        tooltips: {
+                            enabled: true
+                        },
+                        responsive: true,
+                    }
+                });
+            });
+        });
+        emp_table = $('#employees').DataTable({
+            "paging": false,
+            "dom": 't',
+            "order": [[0, "asc"], [1, "asc"]],
+            "columnDefs": [{
+                "targets": [0],
+                "visible": false,
+                "searchable": false
+            }],
+            "columns": [
+                { data: 'parent' },
+                { data: 'dpt' },
+                { data: 'occupancy' }
+            ],
+            "footerCallback": function (row, data, start, end, display) {
+                var api = this.api();
+                var regex = /([0-9]+)/g;
+                var root_dpt = function (i) {
+                    var result = i.toString().match(regex);
+                    return result[0].length == 1;
+                };
+                if (api.column(1).data().length) {
+                    var total = 0;
+                    var totalNTK = 0;
+                    api.rows().every(function (rowIdx, tableLoop, rowLoop) {
+                        if (root_dpt(this.data()['dpt']) && !hidden_list.includes(this.data()['dpt'].toString().match(regex)[0])) {
+                            total += this.data()['occupancy'];
+                            var result = this.data()['dpt'].toString().match(regex);
+                            if (result[0] != '7') {
+                                totalNTK += this.data()['occupancy'];
+                            }
+                        }
+                    });
+                    $(api.column(2).footer()).html('CelkemNTK: ' + totalNTK.toFixed(2) + ' Celkem: ' + total.toFixed(2));
+                }
+            },
+            "rowGroup": {
+                dataSrc: "parent"
+            },
+            "bLengthChange": false,
+            "bInfo": false,
+        });
+        var date = new Date();
+        var next_month = new Date(new Date().setMonth(new Date().getMonth() + 1));
+        $("#date_from").datepicker('setDate', date);
+        $("#date_to").datepicker('setDate', next_month);
+    });
+
+
+</script>
+{% endblock %}
+
+<div class='container-fluid'>
+    <div class='row buffer-top-md'>
+        <div class='col-md-8' id='canvas-container'>
+            <h2>Úvazky v rozsahu: </h2>
+            <form id='dateForm' name='dateForm' class='col-sm-2'>
+                <div class='input-daterange input-group' id='datepicker'>
+                    <input type='text' class='form-control' name='date_from' id='date_from' readonly="readonly" />
+                    <div class="input-group-addon">do</div>
+                    <input type='text' class='form-control' name='date_to' id='date_to' readonly="readonly" />
+                </div>
+            </form>
+            <canvas id='graph_canvas' class='plot'></canvas>
+        </div>
+        <div class='col-md-3 pull-right'>
+            <div class='col-md-5'>
+                <table id='employees' class='display table table-bordered' name='employees'>
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Oddělení</th>
+                            <th>Úvazky</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                    <tfoot>
+                        <tr>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}

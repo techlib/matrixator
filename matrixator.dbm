@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+CAUTION: Do not modify this file unless you know what you are doing.
+         Unexpected results may occur if the code is changed deliberately.
+-->
+<dbmodel pgmodeler-ver="0.9.1" last-position="0,0" last-zoom="1"
+	 default-schema="public" default-owner="postgres">
+<role name="matrixator"
+      createdb="true"
+      encrypted="true"
+      password="abrakadabramatrix">
+</role>
+
+<database name="matrixator" is-template="false" allow-conns="true">
+	<role name="matrixator"/>
+</database>
+
+<schema name="public" fill-color="#e1e1e1" sql-disabled="true">
+</schema>
+
+<table name="play">
+	<schema name="public"/>
+	<role name="matrixator"/>
+	<position x="460" y="240"/>
+	<column name="id" not-null="true">
+		<type name="bigserial" length="0"/>
+	</column>
+	<column name="status" not-null="true">
+		<type name="character varying" length="0"/>
+	</column>
+	<column name="host" not-null="true">
+		<type name="character varying" length="0"/>
+	</column>
+	<column name="ts" not-null="true" default-value="now()">
+		<type name="timestamptz" length="0"/>
+	</column>
+	<constraint name="play_pk" type="pk-constr" table="public.play">
+		<columns names="id" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<index name="play_status_idx" table="public.play"
+	 concurrent="false" unique="false" fast-update="false" buffering="false"
+	 index-type="btree" factor="0">
+		<idxelement use-sorting="false">
+			<column name="status"/>
+		</idxelement>
+</index>
+
+<index name="play_ts_idx" table="public.play"
+	 concurrent="false" unique="false" fast-update="false" buffering="false"
+	 index-type="btree" factor="0">
+		<idxelement use-sorting="true" nulls-first="false" asc-order="true">
+			<column name="ts"/>
+		</idxelement>
+</index>
+
+<index name="play_host_idx" table="public.play"
+	 concurrent="false" unique="false" fast-update="false" buffering="false"
+	 index-type="btree" factor="0">
+		<idxelement use-sorting="false">
+			<column name="host"/>
+		</idxelement>
+</index>
+
+<table name="task">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="1080" y="220"/>
+	<column name="id" not-null="true">
+		<type name="bigserial" length="0"/>
+	</column>
+	<column name="play" not-null="true">
+		<type name="bigint" length="0"/>
+	</column>
+	<column name="result" not-null="true">
+		<type name="jsonb" length="0"/>
+	</column>
+	<column name="duration" not-null="true">
+		<type name="tsrange" length="0"/>
+	</column>
+	<column name="status" not-null="true">
+		<type name="character varying" length="0"/>
+	</column>
+	<constraint name="task_pk" type="pk-constr" table="public.task">
+		<columns names="id" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<relationship name="play_has_many_task" type="rel1n"
+	 src-col-pattern="{sc}_{st}"
+	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
+	 src-fk-pattern="{st}_fk"
+	 custom-color="#83a522"
+	 src-table="public.play"
+	 dst-table="public.task"
+	 src-required="true" dst-required="false"/>
+
+</dbmodel>
