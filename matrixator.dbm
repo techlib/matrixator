@@ -34,6 +34,9 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	<column name="ts" not-null="true" default-value="now()">
 		<type name="timestamptz" length="0"/>
 	</column>
+	<column name="name">
+		<type name="character varying" length="0"/>
+	</column>
 	<constraint name="play_pk" type="pk-constr" table="public.play">
 		<columns names="id" ref-type="src-columns"/>
 	</constraint>
@@ -70,9 +73,6 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	<column name="id" not-null="true">
 		<type name="bigserial" length="0"/>
 	</column>
-	<column name="play" not-null="true">
-		<type name="bigint" length="0"/>
-	</column>
 	<column name="result" not-null="true">
 		<type name="jsonb" length="0"/>
 	</column>
@@ -82,18 +82,23 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	<column name="status" not-null="true">
 		<type name="character varying" length="0"/>
 	</column>
+	<column name="id_play">
+		<type name="bigserial" length="0"/>
+	</column>
 	<constraint name="task_pk" type="pk-constr" table="public.task">
 		<columns names="id" ref-type="src-columns"/>
 	</constraint>
 </table>
 
-<relationship name="play_has_many_task" type="rel1n"
-	 src-col-pattern="{sc}_{st}"
-	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
-	 src-fk-pattern="{st}_fk"
-	 custom-color="#83a522"
-	 src-table="public.play"
-	 dst-table="public.task"
-	 src-required="true" dst-required="false"/>
+<constraint name="play_fk" type="fk-constr" comparison-type="MATCH FULL"
+	 upd-action="CASCADE" del-action="CASCADE" ref-table="public.play" table="public.task">
+	<columns names="id_play" ref-type="src-columns"/>
+	<columns names="id" ref-type="dst-columns"/>
+</constraint>
+
+<relationship name="rel_task_play" type="relfk"
+	 src-table="public.task"
+	 dst-table="public.play" reference-fk="play_fk"
+	 src-required="false" dst-required="false"/>
 
 </dbmodel>

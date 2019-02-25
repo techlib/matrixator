@@ -28,6 +28,7 @@ CREATE TABLE public.play(
 	status character varying NOT NULL,
 	host character varying NOT NULL,
 	ts timestamptz NOT NULL DEFAULT now(),
+	name character varying,
 	CONSTRAINT play_pk PRIMARY KEY (id)
 
 );
@@ -66,11 +67,10 @@ CREATE INDEX play_host_idx ON public.play
 -- DROP TABLE IF EXISTS public.task CASCADE;
 CREATE TABLE public.task(
 	id bigserial NOT NULL,
-	play bigint NOT NULL,
 	result jsonb NOT NULL,
 	duration tsrange NOT NULL,
 	status character varying NOT NULL,
-	id_play bigint NOT NULL,
+	id_play bigserial,
 	CONSTRAINT task_pk PRIMARY KEY (id)
 
 );
@@ -82,7 +82,7 @@ ALTER TABLE public.task OWNER TO postgres;
 -- ALTER TABLE public.task DROP CONSTRAINT IF EXISTS play_fk CASCADE;
 ALTER TABLE public.task ADD CONSTRAINT play_fk FOREIGN KEY (id_play)
 REFERENCES public.play (id) MATCH FULL
-ON DELETE RESTRICT ON UPDATE CASCADE;
+ON DELETE CASCADE ON UPDATE CASCADE;
 -- ddl-end --
 
 
