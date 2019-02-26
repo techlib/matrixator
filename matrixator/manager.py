@@ -3,6 +3,8 @@
 
 from werkzeug.exceptions import Unauthorized
 from sqlalchemy import and_
+from datetime import datetime
+import os
 
 __all__ = ['Manager']
 
@@ -46,3 +48,20 @@ class Manager(object):
                         play_db.append(self.db.task.insert(
                             result=msg, status='success', host=host))
                         play_db.status = 'success'
+
+    def get_last_failed(self):
+        retval = []
+        for fail in self.db.play.filter_by(status='failed').all():
+            retval.append({'name': f'{fail.name}', 'time': datetime(
+                fail.ts), 'host': f'<a href="/host/{fail.host}">{fail.host}</a>'})
+        return retval
+
+    def get_host_history(self, hostname):
+        retval = []
+        for play in self.db.play.filter_by(host=hostname):
+            retval.append(
+                {'name': f'{play.name}', 'status': f'{play.status}', 'time': f'{play.ts}'})
+        return retval
+
+    def get_hosts(self):
+        return str(self.db.execute('select distinct host from play where ts > now() - \'1 week\'::interval')).split()

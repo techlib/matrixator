@@ -1,26 +1,27 @@
 {% extends 'base.html' %}
 
 
-{% block title %}Info{% endblock %}
+{% block title %}Host history{% endblock %}
 
 {% block content %}
 {% block scripts %}
 <script>
     $(document).ready(function () {
+        var hostname = '{{hostname}}'
         var plays_table = $('#plays').DataTable({
-            "ajax": "/last_failed_plays",
+            "ajax": "/host_data/" + hostname,
             "pageLength": 25,
             "order": [
-                [1, "dsc"]
+                [2, "dsc"]
             ],
             "columns": [{
-                    data: 'name'
+                    data: 'play'
+                },
+                {
+                    data: 'status'
                 },
                 {
                     data: 'time'
-                },
-                {
-                    data: 'host'
                 },
             ],
             'fixedHeader': true,
@@ -36,9 +37,9 @@
                 <table id='plays' class='display table table-bordered' name='plays'>
                     <thead>
                         <tr>
-                            <th>Name</th>
+                            <th>Play</th>
+                            <th>Status</th>
                             <th>Time</th>
-                            <th>Host</th>
                         </tr>
                     </thead>
                     <tbody></tbody>

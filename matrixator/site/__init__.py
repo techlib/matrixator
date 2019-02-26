@@ -26,5 +26,33 @@ def make_site(manager, debug=False):
     def msg():
         manager.process_msg(flask.request.get_json(),
                             flask.request.headers.get('Authorization'))
+    
+    @app.route('/report/<id>')
+    def report(id):
+        return flask.render_template('report.html', **locals())
+
+    @app.route('/last_failed_plays')
+    def data_fail_play():
+        retval = {'data':[]}
+        fails = manager.get_last_failed()
+        for fail in fails:
+            retval['data'].append({'name': fail['name'], 'time': fail['time'], 'host': fail['host']})
+        return flask.jsonify(retval)
+    
+    @app.route('/host/<hostname>')
+    def host_detail(hostname):
+        return flask.render_template('host.html', **locals())
+
+    @app.route('/host_data/<hostname>')
+    def host_data(hostname):
+        retval = {'data':[]}
+        plays = manager.get_host_history(hostname)
+        for play in plays:
+            retval['data'].append({'play': play['name'], 'status': play['status'], 'time': play['time']})
+        return flask.jsonify(retval)
+    
+    @app.route('/monitor/host')
+    def get_hosts():
+        return flask.jsonify({'data': manager.get_hosts()})
 
     return app

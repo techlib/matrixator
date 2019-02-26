@@ -9,7 +9,10 @@ __all__ = ['Matrixator']
 
 
 class Matrixator:
-    def __init__(self, room='!rommId:example.com', server='https://matrix.org', matrix_token='reallyLongRandomToken'):
+    def __init__(self, room, server, matrix_token):
+        if not (room and server and matrix_token):
+            print(
+                'Missing init parameters for Matrix!!!\nThis application won\'t notify.')
         self.room = room
         self.server = server
         self. matrix_token = matrix_token
