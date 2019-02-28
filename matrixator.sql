@@ -11,6 +11,12 @@ CREATE ROLE matrixator WITH
 	ENCRYPTED PASSWORD 'abrakadabramatrix';
 -- ddl-end --
 
+-- Appended SQL commands --
+GRANT all on taks to matrixator;
+grant all on play to matrixator;
+grant all on rel_task_play to matrixator;
+-- ddl-end --
+
 
 -- Database creation must be done outside a multicommand file.
 -- These commands were put in this file only as a convenience.
@@ -28,7 +34,7 @@ CREATE TABLE public.play(
 	status character varying NOT NULL,
 	host character varying NOT NULL,
 	ts timestamptz NOT NULL DEFAULT now(),
-	name character varying,
+	name character varying NOT NULL,
 	CONSTRAINT play_pk PRIMARY KEY (id)
 
 );
@@ -75,7 +81,7 @@ CREATE TABLE public.task(
 
 );
 -- ddl-end --
-ALTER TABLE public.task OWNER TO postgres;
+ALTER TABLE public.task OWNER TO matrixator;
 -- ddl-end --
 
 -- object: play_fk | type: CONSTRAINT --

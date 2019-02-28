@@ -9,6 +9,9 @@ CAUTION: Do not modify this file unless you know what you are doing.
       createdb="true"
       encrypted="true"
       password="abrakadabramatrix">
+	<appended-sql><![CDATA[GRANT all on taks to matrixator;
+grant all on play to matrixator;
+grant all on rel_task_play to matrixator;]]></appended-sql>
 </role>
 
 <database name="matrixator" is-template="false" allow-conns="true">
@@ -34,7 +37,7 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	<column name="ts" not-null="true" default-value="now()">
 		<type name="timestamptz" length="0"/>
 	</column>
-	<column name="name">
+	<column name="name" not-null="true">
 		<type name="character varying" length="0"/>
 	</column>
 	<constraint name="play_pk" type="pk-constr" table="public.play">
@@ -68,7 +71,7 @@ CAUTION: Do not modify this file unless you know what you are doing.
 
 <table name="task">
 	<schema name="public"/>
-	<role name="postgres"/>
+	<role name="matrixator"/>
 	<position x="1080" y="220"/>
 	<column name="id" not-null="true">
 		<type name="bigserial" length="0"/>

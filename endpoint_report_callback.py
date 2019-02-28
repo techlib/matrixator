@@ -6,6 +6,8 @@ import json
 from requests import post
 from functools import partial
 from ansible.inventory.host import Host
+from ansible.module_utils._text import to_native
+from ansible.errors import AnsibleError
 import datetime
 
 DOCUMENTATION = '''
@@ -19,7 +21,7 @@ DOCUMENTATION = '''
         - This is an ansible callback plugin that sends play result to endpoint.
         - Before 2.4 only environment variables were available for configuring this plugin
     options:
-     endpoint_url:
+      endpoint_url:
         required: True
         description: endpoint URL
         env:
@@ -40,14 +42,16 @@ DOCUMENTATION = '''
 def current_time():
     return '%sZ' % datetime.datetime.utcnow().isoformat()
 
+
 class CallbackModule(CallbackBase):
-    """This is an ansible callback plugin that sends failure
-    updates to a matrix room after playbook execution.
+    """
+    This is an ansible callback plugin that 
+    sends play results to an endpoint.
     """
     CALLBACK_VERSION = 2.0
     CALLBACK_TYPE = 'notification'
-    CALLBACK_NAME = 'matrix'
-    CALLBACK_NEEDS_WHITELIST = True
+    CALLBACK_NAME = 'endpoint_report_callback'
+    CALLBACK_NEEDS_WHITELIST = False
 
     def __init__(self, display=None):
         super(CallbackModule, self).__init__(display=display)
@@ -76,17 +80,21 @@ class CallbackModule(CallbackBase):
 
     def send_msg(self, payload):
         try:
-            req = post(self.url, headers={'Authentication': f'Bearer {self.token}'}, json=payload)
+            req = post(self.url, headers={
+                       'Authentication': f'Bearer {self.token}'}, json=payload)
         except Exception as e:
-            print(e)
+            self._display.warning(f'POST failed with exception {e}')
+            self.disabled = True
+            raise AnsibleError(to_native(e))
 
         if req.status_code != 200:
-            print(f'Failure to post JSON to endpoint. Status code: {req.status_code}')
+            self._display.warning(
+                f'Failure to post JSON to endpoint. Status code: {req.status_code}')
 
     def v2_playbook_on_stats(self, stats):
         """Display info about playbook statistics"""
 
-        payload = {'plays': self.results,}
+        payload = {'plays': self.results, }
         self.send_msg(payload)
 
     def _new_play(self, play):

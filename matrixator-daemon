@@ -47,12 +47,12 @@ if __name__ == '__main__':
         http_pool = config.getint('http', 'pool_size', fallback=4)
 
         # Read matrix options
-        matrix_server = config.get('matrix', 'server', fallback='localhost')
-        matrix_room = config.get('matrix', 'room', fallback='!idOfRoom:domain.com')
-        matrix_token = config.get('matrix', 'token', fallback='123456789')
+        matrix_server = config.get('matrix', 'server')
+        matrix_room = config.get('matrix', 'room')
+        matrix_token = config.get('matrix', 'token')
 
         # Read authentication options
-        token = config.get('authentication', 'token', fallback='123456789' )
+        token = config.get('authentication', 'token')
         
 
         # Extract manager options, sans the pool_size we handle here.
