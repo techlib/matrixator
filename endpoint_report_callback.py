@@ -9,6 +9,7 @@ from ansible.inventory.host import Host
 from ansible.module_utils._text import to_native
 from ansible.errors import AnsibleError
 import datetime
+import os
 
 DOCUMENTATION = '''
     callback: NOTIFY_ENDPOINT
@@ -29,13 +30,14 @@ DOCUMENTATION = '''
         ini:
           - section: callback_endpoint
             key: endpoint_url
-      token:
+      endpoint_token:
+        required: True
         description: Authentication token.
         env:
           - name: ENDPOINT_TOKEN
         ini:
           - section: callback_endpoint
-            key: token
+            key: endpoint_token
 '''
 
 
@@ -68,7 +70,7 @@ class CallbackModule(CallbackBase):
             task_keys=task_keys, var_options=var_options, direct=direct)
 
         self.url = self.get_option('endpoint_url')
-        self.token = self.get_option('token')
+        self.token = self.get_option('endpoint_token')
         self.show_invocation = (self._display.verbosity > 1)
 
         if self.url is None:
@@ -89,12 +91,14 @@ class CallbackModule(CallbackBase):
 
         if req.status_code != 200:
             self._display.warning(
-                f'Failure to post JSON to endpoint. Status code: {req.status_code}')
+                f'Failure to post JSON to endpoint. Response: {req.text}')
 
     def v2_playbook_on_stats(self, stats):
         """Display info about playbook statistics"""
-
-        payload = {'plays': self.results, }
+        hostname = os.environ['HOSTNAME']
+        """if run locally change hostname"""
+        plays = json.loads(json.dumps(self.results).replace('localhost',hostname).replace('127.0.0.1',hostname))
+        payload = {'plays': plays, }
         self.send_msg(payload)
 
     def _new_play(self, play):

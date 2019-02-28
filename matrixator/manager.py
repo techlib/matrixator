@@ -18,8 +18,9 @@ class Manager(object):
         self. matrixator = matrixator
 
     def process_msg(self, msg, token):
-        # if token != 'Bearer ' + self.token:
-        #   raise Unauthorized()
+        if token != 'Bearer ' + self.token:
+            log.msg(f'Unauthorized attempt to POST. Payload:\n{msg}\nToken: {token}')
+            raise Unauthorized()
         for play in msg['plays']:
             play_name = play['play']['name']
             play_ts = play['play']['duration']['start']
@@ -57,15 +58,15 @@ class Manager(object):
     def get_last_failed(self):
         retval = []
         for fail in self.db.play.filter_by(status='failed').all():
-            retval.append({"name": f'{fail.name}', "time": datetime(
-                fail.ts), "host": f'<a href="/host/{fail.host}">{fail.host}</a>'})
+            retval.append({"name": fail.name, "time": fail.ts,
+                           "host": f'<a href="/host/{fail.host}">{fail.host}</a>'})
         return retval
 
     def get_host_history(self, hostname):
         retval = []
         for play in self.db.play.filter_by(host=hostname).all():
             retval.append(
-                {"name": f'{play.name}', "status": f'{play.status}', "time": f'{play.ts}'})
+                {"name": play.name, "status": play.status, "time": play.ts})
         return retval
 
     def get_hosts(self):

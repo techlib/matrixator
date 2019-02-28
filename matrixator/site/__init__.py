@@ -25,7 +25,7 @@ def make_site(manager, debug=False):
     @app.route('/api/incoming', methods=['POST'])
     def msg():
         result = manager.process_msg(flask.request.get_json(),
-                                     flask.request.headers.get('Authorization'))
+                                     flask.request.headers.get('Authentication'))
         if result:
             return flask.Response('OK', 200)
         else:
